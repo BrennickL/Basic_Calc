@@ -123,7 +123,7 @@ def parse_eq_parens(str)
     str.gsub!(/(\([^\(|\)]*\))/) do |group|
       parse_eq_emdas(group)
       group.gsub!(/[\(|\[|\]|\)]/){ '' }
-      puts "Group: #{group}"
+      # puts "Group: #{group}"
       group
     end
     break if pre_length == str.length
@@ -131,6 +131,9 @@ def parse_eq_parens(str)
   parse_eq_remove_negs(str)
 end
 
+# Handler for any trailing or double negative operators
+# @param str <String> string representing an equation fragment
+# @return nil
 def parse_eq_remove_negs(str)
   ['\*', '\/', '\+', '\-'].each do |op|
     until str.empty?
@@ -138,7 +141,7 @@ def parse_eq_remove_negs(str)
       # do calculations
       str.gsub!(/([\-]?\d+)([#{op}][\-]?)(\d+)/) do
         var1, op, var2, neg = $1, $2, $3, ''
-        puts "Negatives:\s#{str} :#{$&}"
+        # puts "Negatives:\s#{str} :#{$&}"
         op, neg = op.split('') if op.length > 1
         ans = var1.to_i.send(op, (neg + var2).to_i)
         ans
@@ -162,7 +165,7 @@ def parse_eq_emdas(group)
         one, two, three, neg = $1, $2, $3, ''
         two, neg = two.split('') if two.length > 1
         ans = one.to_i.send(two, (neg + three).to_i)
-        puts "EMDAS: #{x}: #{ans}"
+        # puts "EMDAS: #{x}: #{ans}"
         ans
       end
       break if pre_length == group.length
@@ -171,16 +174,16 @@ def parse_eq_emdas(group)
 end
 
 # start the application
-# display_menu
+display_menu
 
 # Testing Only
-str = [
-  '(7+3-4)+(23-2)-(4*-5)', # 47
-  '((21/3)+3-4)+(42/2)-(4*-5)', # 47
-  '((21/3)+-1)-(42/-2)-(4*-5)', # 47
-]
-str.each do |substr|
-  puts "String:\s#{substr}"
-  parse_eq_string(substr)
-  puts "Answer:\s#{substr}"
-end
+# str = [
+#   '(7+3-4)+(23-2)-(4*-5)', # 47
+#   '((21/3)+3-4)+(42/2)-(4*-5)', # 47
+#   '((21/3)+-1)-(42/-2)-(4*-5)', # 47
+# ]
+# str.each do |substr|
+#   puts "String:\s#{substr}"
+#   parse_eq_string(substr)
+#   puts "Answer:\s#{substr}"
+# end
