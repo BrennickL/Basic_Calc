@@ -133,12 +133,17 @@ end
 
 def parse_eq_remove_negs(str)
   ['\*', '\/', '\+', '\-'].each do |op|
-    str.gsub!(/([\-]?\d+)([#{op}][\-]?)(\d+)/) do
-      var1, op, var2, neg = $1, $2, $3, ''
-      puts "Negatives:\s#{str} :#{$&}"
-      op, neg = op.split('') if op.length > 1
-      ans = var1.to_i.send(op, (neg + var2).to_i)
-      ans
+    until str.empty?
+      pre_length = str.length
+      # do calculations
+      str.gsub!(/([\-]?\d+)([#{op}][\-]?)(\d+)/) do
+        var1, op, var2, neg = $1, $2, $3, ''
+        puts "Negatives:\s#{str} :#{$&}"
+        op, neg = op.split('') if op.length > 1
+        ans = var1.to_i.send(op, (neg + var2).to_i)
+        ans
+      end
+      break if pre_length == str.length
     end
   end
 end # parse_eq_remove_negs
@@ -170,7 +175,9 @@ end
 
 # Testing Only
 str = [
-  '(7+3-4)+(23-2)-(4*-5)' # 7
+  '(7+3-4)+(23-2)-(4*-5)', # 47
+  '((21/3)+3-4)+(42/2)-(4*-5)', # 47
+  '((21/3)+-1)-(42/-2)-(4*-5)', # 47
 ]
 str.each do |substr|
   puts "String:\s#{substr}"
