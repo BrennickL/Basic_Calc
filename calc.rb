@@ -101,34 +101,54 @@ end
 def show_eq_menu
   puts "Enter an equation like [5-7+3+(10*10)+(20+20)]:\s"
   eq = gets.strip
-  answer = parse_eq_string(eq)
+  parse_eq_string(eq)
   puts "Answer:\s#{eq}"
   display_menu
 end
 
 # Parser for equations submitted as strings
-# @param eq <String> simple equation
+# @param str <String> simple equation
 # @return <String> reduced answer
-def parse_eq_string(eq)
-  eq_regex = /\((\d+)([\+|\-|\*|\/])(\d+)\)/
-  # parenthesis (P)
-  eq.gsub!(eq_regex) do |g|
-    ans = $1.to_i.send($2,$3.to_i)
-    ans
+def parse_eq_string(str)
+  parse_eq_parens(str)
+end
+
+# Parse embeded parenthesis and do calculations
+# @param str <String> string or substring of the equation
+# @return nil
+def parse_eq_parens(str)
+  until str.empty?
+    pre_length = str.length
+    # obtain everything inside parens as one string
+    str.gsub!(/(\([^\(|\)]*\))/) do |group|
+      puts "Group: #{group}"
+      parse_eq_emdas(group)
+      group.gsub!(/[\(|\[|\]|\)]/){ |x| '' }
+      group
+    end
+    break if pre_length == str.length
   end
+  ops = ['\*', '\/', '\+', '\-'].join('|')
+  str.gsub!(/([\-]?\d+)([#{ops}])(\d+)/){ |x| $1.to_i.send($2,$3.to_i)}
+end
+
+# Parse the embeded equation w/out parens according to PEMDAS
+# @param group <String> substring of the equation w/o parens
+# @return nil
+def parse_eq_emdas(group)
   # EMDAS - order of operations
-  ops = ['\*', '\/', '\+', '\-']
-  ops.each do |op|
-    until eq.empty?
-      pre_length = eq.length
-      eq.gsub!(/(\d+)([#{op}])(\d+)/) do |x|
+  ['\*', '\/', '\+', '\-'].each do |op|
+    until group.empty?
+      pre_length = group.length
+      # do calculations with no parenthesis
+      group.gsub!(/(\d+)([#{op}])(\d+)/) do |x|
+        puts "EMDAS: #{x}"
         ans = $1.to_i.send($2,$3.to_i)
         ans
       end
-      break if eq.length == pre_length
+      break if pre_length == group.length
     end
   end
-  eq
 end
 
 # start the application
