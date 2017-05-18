@@ -5,9 +5,9 @@
 # @return
 def display_menu
   puts "\n\nMain Menu"
-  puts "1) Enter Variables"
-  puts "2) Enter Search String"
-  puts "0) Quit"
+  puts '1) Enter Variables'
+  puts '2) Enter Search String'
+  puts '0) Quit'
   select_option
 end
 
@@ -87,9 +87,9 @@ end
 # @param var2 <String> Right hand equation variable
 # @return nil
 def calculate_vars(var1, op, var2)
-  ans = var1.to_f.send(op,var2.to_f)
+  ans = var1.to_f.send(op, var2.to_f)
   if !ans.nil?
-    printf("Calculated Answer:\s%3.3f\n",ans)
+    printf("Calculated Answer:\s%3.3f\n", ans)
   else
     show_error_menu
   end
@@ -121,16 +121,28 @@ def parse_eq_parens(str)
     pre_length = str.length
     # obtain everything inside parens as one string
     str.gsub!(/(\([^\(|\)]*\))/) do |group|
-      puts "Group: #{group}"
       parse_eq_emdas(group)
-      group.gsub!(/[\(|\[|\]|\)]/){ |x| '' }
+      group.gsub!(/[\(|\[|\]|\)]/){ '' }
+      puts "Group: #{group}"
       group
     end
     break if pre_length == str.length
   end
-  ops = ['\*', '\/', '\+', '\-'].join('|')
-  str.gsub!(/([\-]?\d+)([#{ops}])(\d+)/){ |x| $1.to_i.send($2,$3.to_i)}
+  parse_eq_remove_negs(str)
 end
+
+def parse_eq_remove_negs(str)
+  ['\*', '\/', '\+', '\-'].each do |op|
+    str.gsub!(/([\-]?\d+)([#{op}][\-]?)(\d+)/) do
+      var1, op, var2, neg = $1, $2, $3, ''
+      puts "Negatives:\s#{str} :#{$&}"
+      op, neg = op.split('') if op.length > 1
+      ans = var1.to_i.send(op, (neg + var2).to_i)
+      ans
+    end
+  end
+end # parse_eq_remove_negs
+
 
 # Parse the embeded equation w/out parens according to PEMDAS
 # @param group <String> substring of the equation w/o parens
@@ -141,9 +153,11 @@ def parse_eq_emdas(group)
     until group.empty?
       pre_length = group.length
       # do calculations with no parenthesis
-      group.gsub!(/(\d+)([#{op}])(\d+)/) do |x|
-        puts "EMDAS: #{x}"
-        ans = $1.to_i.send($2,$3.to_i)
+      group.gsub!(/(\d+)(#{op}[\-]?)(\d+)/) do |x|
+        one, two, three, neg = $1, $2, $3, ''
+        two, neg = two.split('') if two.length > 1
+        ans = one.to_i.send(two, (neg + three).to_i)
+        puts "EMDAS: #{x}: #{ans}"
         ans
       end
       break if pre_length == group.length
@@ -152,4 +166,14 @@ def parse_eq_emdas(group)
 end
 
 # start the application
-display_menu
+# display_menu
+
+# Testing Only
+str = [
+  '(7+3-4)+(23-2)-(4*-5)' # 7
+]
+str.each do |substr|
+  puts "String:\s#{substr}"
+  parse_eq_string(substr)
+  puts "Answer:\s#{substr}"
+end
