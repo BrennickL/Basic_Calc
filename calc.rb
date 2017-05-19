@@ -1,5 +1,7 @@
 # @author Brennick Langston
 # @version 1.0.0
+# @todo History Collector
+# @todo Functions
 
 # Displays the Main Menu
 # @return
@@ -7,6 +9,7 @@ def display_menu
   puts "\n\nMain Menu"
   puts '1) Enter Variables'
   puts '2) Enter Search String'
+  puts '3) Show History'
   puts '0) Quit'
   select_option
 end
@@ -23,11 +26,13 @@ end
 # @param option <String> user selected input option
 # @return nil
 def process_option(option)
-  case option.to_i
+  case option.to_f
   when 1
     show_variable_menu
   when 2
     show_eq_menu
+  when 3
+    show_eq_history
   when 0
     exit_application
   else
@@ -110,7 +115,10 @@ end
 # @param str <String> simple equation
 # @return <String> reduced answer
 def parse_eq_string(str)
+  eq = str
   parse_eq_parens(str)
+  ans = str
+  @history[eq] = ans
 end
 
 # Parse embeded parenthesis and do calculations
@@ -123,7 +131,7 @@ def parse_eq_parens(str)
     str.gsub!(/(\([^\(|\)]*\))/) do |group|
       parse_eq_emdas(group)
       group.gsub!(/[\(|\[|\]|\)]/){ '' }
-      # puts "Group: #{group}"
+      puts "Group: #{group}"
       group
     end
     break if pre_length == str.length
@@ -139,18 +147,17 @@ def parse_eq_remove_negs(str)
     until str.empty?
       pre_length = str.length
       # do calculations
-      str.gsub!(/([\-]?\d+)([#{op}][\-]?)(\d+)/) do
-        var1, op, var2, neg = $1, $2, $3, ''
-        # puts "Negatives:\s#{str} :#{$&}"
-        op, neg = op.split('') if op.length > 1
-        ans = var1.to_i.send(op, (neg + var2).to_i)
+      # <Floats> are inserted into the string from EMDAS
+      str.gsub!(/([\-]?\d+\.\d*?)([#{op}])([\-]?\d+\.\d*?)/) do
+        var1, op, var2 = $1, $2, $3
+        puts "Negatives:\s#{str} :#{$&}"
+        ans = var1.to_f.send(op, var2.to_f)
         ans
       end
       break if pre_length == str.length
     end
   end
 end # parse_eq_remove_negs
-
 
 # Parse the embeded equation w/out parens according to PEMDAS
 # @param group <String> substring of the equation w/o parens
@@ -161,10 +168,10 @@ def parse_eq_emdas(group)
     until group.empty?
       pre_length = group.length
       # do calculations with no parenthesis
-      group.gsub!(/(\d+)(#{op}[\-]?)(\d+)/) do |x|
-        one, two, three, neg = $1, $2, $3, ''
-        two, neg = two.split('') if two.length > 1
-        ans = one.to_i.send(two, (neg + three).to_i)
+      # <Floats> are optional in the string
+      group.gsub!(/([\-]?\d+\.?\d*?)(#{op})([\-]?\d+\.?\d*?)/) do |x|
+        one, two, three = $1, $2, $3
+        ans = one.to_f.send(two, three.to_f)
         # puts "EMDAS: #{x}: #{ans}"
         ans
       end
@@ -173,17 +180,39 @@ def parse_eq_emdas(group)
   end
 end
 
+# parses out the functions and runs them
+def parse_eq_functions(str)
+  func_regex = /(\w+)\(([\-]?\d+\.?\d*?)([\*\-])([\-]?\d+\.?\d*?)\)/
+  until str.empty?
+    pre_length = str.length
+    str.gsub(func_regex) do
+    end
+  end
+end
+
+# Displays the equation history from the user
+# @return nil
+def show_eq_history
+  counter = 0
+  @history.each { |k, v| puts "#{counter += 1}\) #{k} #{v}" }
+end
+
+# History bucket
+# Key = <String> equation
+# Value = <Integer> answer
+@history = {}
+
 # start the application
-display_menu
+# display_menu
 
 # Testing Only
-# str = [
-#   '(7+3-4)+(23-2)-(4*-5)', # 47
-#   '((21/3)+3-4)+(42/2)-(4*-5)', # 47
-#   '((21/3)+-1)-(42/-2)-(4*-5)', # 47
-# ]
-# str.each do |substr|
-#   puts "String:\s#{substr}"
-#   parse_eq_string(substr)
-#   puts "Answer:\s#{substr}"
-# end
+str = [
+  '(7+3-4)+(23-2)-(4*-5)', # 47
+  '((21/3)+3-4)+(42/2)-(4*-5)', # 47
+  '((21/3)+-1)-(42/-2)-(4*-5)', # 47
+]
+str.each do |substr|
+  puts "String:\s#{substr}"
+  parse_eq_string(substr)
+  puts "Answer:\s#{substr}"
+end
